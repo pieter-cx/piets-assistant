@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carerix — My Assistant v2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',system-ui,sans-serif;background:#eef0f3;color:#1a1a2e}
+:root{
+  --blue:#1a73e8;--blue-l:#e8f0fe;--blue-d:#1557b0;
+  --green:#16a34a;--green-l:#dcfce7;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --red:#dc2626;--red-l:#fee2e2;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --pink:#db2777;--pink-l:#fce7f3;
+  --teal:#0891b2;--teal-l:#cffafe;
+  --border:#e2e8f0;--muted:#6b7280;--surface:#fff;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:172px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sb-marks{display:flex;gap:3px;align-items:flex-end}
+.sb-marks span{border-radius:50%;display:block}
+.sm1{width:9px;height:9px;background:var(--blue)}.sm2{width:9px;height:9px;background:#00bcd4}.sm3{width:6px;height:6px;background:var(--blue);opacity:.45;margin-bottom:1px}
+.sb-brand{font-size:16px;font-weight:600;color:var(--blue);letter-spacing:-.3px}
+.sb-sect{font-size:9px;font-weight:600;color:#9ca3af;letter-spacing:.1em;text-transform:uppercase;padding:12px 14px 4px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:6px 14px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:background .1s,color .1s}
+.sb-item:hover{background:#f8fafc;color:#374151}
+.sb-item.active{background:var(--blue-l);color:var(--blue);font-weight:500}
+.sb-item svg{width:13px;height:13px;flex-shrink:0;opacity:.65}
+.sb-item.active svg{opacity:1}
+.sb-badge{background:var(--red);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;margin-left:auto;font-weight:600;font-family:'DM Mono',monospace}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:46px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;padding:0 18px;flex-shrink:0}
+.tb-ctx{font-size:12px;font-weight:500;color:var(--blue);background:var(--blue-l);border:1px solid #c7d9f8;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:5px;cursor:pointer}
+.tb-filters{display:flex;gap:5px}
+.tb-pill{font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;background:var(--surface);white-space:nowrap}
+.tb-pill:hover{border-color:var(--blue);color:var(--blue)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.tb-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:var(--muted);position:relative}
+.tb-icon:hover{background:#f1f5f9}
+.tb-icon svg{width:16px;height:16px}
+.notif-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--red);border:1.5px solid var(--surface)}
+.tb-av{width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.tb-user{font-size:12px;font-weight:500;color:#374151}
+
+/* TABS */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:2px;flex-shrink:0}
+.tab{font-size:12.5px;padding:11px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.tab:hover{color:#374151}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.tab-badge{background:var(--red);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;font-weight:600;font-family:'DM Mono',monospace}
+.ai-pulse{width:7px;height:7px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* PAGES */
+.page{display:none;flex:1;overflow-y:auto;padding:16px 18px;flex-direction:column;gap:14px}
+.page.active{display:flex}
+.placeholder-page{display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;color:var(--muted)}
+.placeholder-page svg{width:40px;height:40px;opacity:.3}
+.placeholder-page p{font-size:13px}
+
+/* ASK BAR */
+.ask-wrap{background:var(--surface);border:1.5px solid var(--blue);border-radius:12px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 10px rgba(26,115,232,.1)}
+.ask-head{background:var(--blue);padding:9px 14px;display:flex;align-items:center;gap:8px}
+.ask-glow{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 2s infinite}
+.ask-title-text{font-size:12.5px;font-weight:600;color:#fff;flex:1}
+.ask-model{font-size:10px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.15);padding:2px 9px;border-radius:10px;font-family:'DM Mono',monospace}
+.chat-log{padding:12px 14px;display:flex;flex-direction:column;gap:9px;max-height:260px;overflow-y:auto;scroll-behavior:smooth}
+.cmsg{display:flex;gap:8px;align-items:flex-start;animation:fadeUp .2s ease}
+.cmsg.user{flex-direction:row-reverse}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.cav{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:2px}
+.cav-ai{background:var(--blue);color:#fff}
+.cav-u{background:var(--blue-l);color:var(--blue-d)}
+.cbub{border-radius:8px;padding:8px 11px;font-size:12px;line-height:1.6;max-width:88%;white-space:pre-wrap;word-break:break-word}
+.cbub-ai{background:#f8fafc;color:#1a1a2e;border:0.5px solid var(--border)}
+.cbub-u{background:var(--blue);color:#fff}
+
+/* RICH RESPONSE CARDS in chat */
+.rich-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;max-width:94%;font-size:12px}
+.rich-title{font-size:12.5px;font-weight:600;color:#1a1a2e;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.rich-title svg{width:14px;height:14px;flex-shrink:0}
+.rich-item{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:0.5px solid var(--border)}
+.rich-item:last-child{border-bottom:none}
+.rich-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.rich-info{flex:1}
+.rich-name{font-size:12px;font-weight:600;color:#1a1a2e}
+.rich-detail{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.rich-score{font-size:14px;font-weight:600;color:var(--blue);text-align:right}
+.rich-score-lbl{font-size:9px;color:var(--muted);text-align:right}
+.rich-tag{display:inline-flex;font-size:10px;background:var(--blue-l);color:var(--blue-d);border-radius:4px;padding:1px 6px;margin-right:3px;margin-top:3px}
+.rich-tag.green{background:var(--green-l);color:#15803d}
+.rich-tag.amber{background:var(--amber-l);color:#92400e}
+.rich-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
+.rich-btn-p{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:11.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.rich-btn-p:hover{background:var(--blue-d)}
+.rich-btn-s{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:5px 11px;font-size:11.5px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.rich-status-row{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.rich-status-row:last-child{border-bottom:none}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-found{background:var(--green)}
+.status-notfound{background:var(--red)}
+.create-form{background:#fafbfc;border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px}
+.create-form-title{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.create-field{margin-bottom:7px}
+.create-label{font-size:10px;color:var(--muted);margin-bottom:3px}
+.create-input{width:100%;border:0.5px solid var(--border);border-radius:6px;padding:6px 9px;font-size:11.5px;font-family:'DM Sans',sans-serif;outline:none;color:#1a1a2e;background:var(--surface)}
+.create-input:focus{border-color:var(--blue)}
+.steps-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.step-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:#374151}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--blue-l);color:var(--blue-d);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-row.done .step-num{background:var(--green-l);color:var(--green)}
+.step-row.done span{color:var(--muted)}
+
+/* TYPING */
+.typing-wrap{display:flex;gap:4px;align-items:center;padding:8px 11px;background:#f8fafc;border-radius:8px;border:0.5px solid var(--border);width:fit-content}
+.typing-wrap span{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.typing-wrap span:nth-child(2){animation-delay:.2s}
+.typing-wrap span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* CHIPS */
+.ask-chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}
+.chip{font-size:11px;color:var(--blue-d);background:var(--blue-l);border:none;border-radius:20px;padding:4px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.chip:hover{background:var(--blue);color:#fff}
+.chip:disabled{opacity:.4;cursor:default}
+.ask-input-row{display:flex;gap:8px;padding:10px 14px;border-top:0.5px solid var(--border);align-items:center}
+.ask-inp{flex:1;border:0.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;color:#1a1a2e;background:var(--surface);transition:border .15s}
+.ask-inp:focus{border-color:var(--blue)}
+.ask-inp::placeholder{color:#aab4c4}
+.send-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.send-btn:hover{background:var(--blue-d)}
+.send-btn:disabled{background:#b0c4e8;cursor:not-allowed}
+.send-btn svg{width:13px;height:13px;fill:#fff}
+.ask-ctx{padding:6px 14px;background:#fafbfc;border-top:0.5px solid var(--border);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ctx-lbl{font-size:10px;color:var(--muted)}
+.ctx-tag{font-size:10px;color:var(--muted);background:var(--surface);border:0.5px solid var(--border);border-radius:4px;padding:2px 7px}
+
+/* SECTION */
+.sec-head{display:flex;align-items:center;justify-content:space-between}
+.sec-title{font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+.sec-cnt{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1px 9px;font-family:'DM Mono',monospace}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:10px}
+.acard{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 14px;transition:box-shadow .15s,transform .15s;animation:cardIn .25s ease both}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.acard:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.acard.out-r{animation:outR .3s ease forwards}
+.acard.out-l{animation:outL .3s ease forwards}
+@keyframes outR{to{opacity:0;transform:translateX(55px) scale(.95)}}
+@keyframes outL{to{opacity:0;transform:translateX(-55px) scale(.95)}}
+.cbadge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;border-radius:20px;padding:2px 9px;margin-bottom:9px}
+.b-alert{background:var(--amber-l);color:#92400e}
+.b-mail{background:var(--purple-l);color:#5b21b6}
+.b-match{background:var(--blue-l);color:var(--blue-d)}
+.b-transcript{background:var(--green-l);color:#15803d}
+.b-followup{background:var(--pink-l);color:#9d174d}
+.b-quality{background:var(--teal-l);color:#0e7490}
+.urg{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.u-h{background:var(--red)}.u-m{background:var(--amber)}.u-l{background:var(--green)}
+.ctitle{font-size:12.5px;font-weight:600;color:#1a1a2e;margin-bottom:5px;line-height:1.35}
+.cdesc{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.cmeta{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.cmeta-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0}
+.cmeta-name{font-size:11.5px;font-weight:500;color:#374151}
+.cmeta-date{font-size:10px;color:var(--muted);margin-left:auto;font-family:'DM Mono',monospace}
+.cactions{display:flex;gap:6px}
+.btn-p{flex:1;background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 0;font-size:11.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.btn-p:hover{background:var(--blue-d)}
+.btn-d{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-size:11.5px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-d:hover{border-color:#9ca3af;color:#374151}
+.empty-state{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty-icon{width:46px;height:46px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.empty-icon svg{width:22px;height:22px;fill:var(--green)}
+
+/* FLOATING PANEL */
+.fp{position:fixed;bottom:18px;right:18px;width:400px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);z-index:900;overflow:hidden}
+.fp.hidden{display:none}
+.fp.minimized .fp-body,.fp.minimized .fp-footer,.fp.minimized .fp-progress{display:none!important}
+.fp.minimized{height:46px!important}
+.fp-head{background:var(--blue);padding:10px 13px;display:flex;align-items:center;gap:9px;cursor:move;user-select:none;flex-shrink:0}
+.fp-icon{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fp-icon svg{width:14px;height:14px;fill:#fff}
+.fp-htext{flex:1;min-width:0}
+.fp-title{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fp-sub{font-size:10px;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.fp-ctrls{display:flex;gap:4px;flex-shrink:0}
+.fp-btn{width:22px;height:22px;border-radius:50%;border:none;cursor:pointer;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.fp-btn:hover{opacity:.75}
+.fp-min-btn{background:rgba(255,255,255,.25);color:#fff}
+.fp-cls-btn{background:rgba(255,255,255,.2);color:#fff}
+.fp-mini-row{display:none;align-items:center;gap:9px;padding:9px 13px;cursor:pointer}
+.fp.minimized .fp-mini-row{display:flex}
+.mini-pulse{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1.5s infinite}
+.mini-lbl{font-size:12px;color:#374151;font-weight:500;flex:1}
+.mini-cnt{font-size:10px;background:var(--blue-l);color:var(--blue-d);border-radius:10px;padding:2px 8px;font-family:'DM Mono',monospace}
+.fp-progress{padding:10px 13px 0;display:flex;flex-direction:column;gap:5px}
+.fp-prog-steps{display:flex;gap:4px}
+.fp-step{flex:1;height:3px;background:var(--border);border-radius:2px;transition:background .3s}
+.fp-step.done{background:var(--blue)}
+.fp-step.cur{background:#93c5fd}
+.fp-prog-lbl{font-size:10px;color:var(--muted);text-align:center;padding-bottom:2px}
+.fp-body{padding:14px;max-height:380px;overflow-y:auto}
+.fp-section{margin-bottom:12px}
+.fp-sec-title{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
+.fp-input{width:100%;border:0.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;color:#1a1a2e;background:var(--surface);transition:border .15s}
+.fp-input:focus{border-color:var(--blue)}
+.fp-textarea{width:100%;border:0.5px solid var(--border);border-radius:7px;padding:9px 10px;font-size:12px;font-family:'DM Sans',sans-serif;resize:vertical;min-height:110px;outline:none;color:#1a1a2e;line-height:1.6;transition:border .15s;background:var(--surface)}
+.fp-textarea:focus{border-color:var(--blue)}
+.fp-tag{display:inline-flex;align-items:center;font-size:10px;background:var(--blue-l);color:var(--blue-d);border-radius:4px;padding:2px 8px;margin-right:4px;margin-bottom:4px}
+.fp-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.fp-row:last-child{border-bottom:none}
+.fp-row-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.fp-row-lbl{font-size:12px;flex:1;color:#374151}
+.fp-row-btn{font-size:10px;background:var(--blue-l);color:var(--blue-d);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.fp-row-btn.confirmed{background:var(--green-l);color:var(--green);cursor:default}
+.fp-match-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)}
+.fp-match-row:last-child{border-bottom:none}
+.fp-match-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.fp-match-score{font-size:15px;font-weight:600;color:var(--blue)}
+.fp-match-lbl{font-size:10px;color:var(--muted)}
+.fp-followup{background:var(--amber-l);border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;margin-top:4px}
+.fp-followup-title{font-size:11px;font-weight:600;color:#92400e;margin-bottom:4px}
+.fp-followup-desc{font-size:11px;color:#78350f;margin-bottom:8px;line-height:1.5}
+.fp-followup-btns{display:flex;gap:6px}
+.fu-yes{background:var(--amber);color:#fff;border:none;border-radius:6px;padding:4px 13px;font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.fu-no{background:transparent;color:var(--amber);border:1px solid var(--amber);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.fp-generating{display:flex;align-items:center;gap:8px;padding:14px;color:var(--muted);font-size:12px}
+.fp-gen-dots{display:flex;gap:4px}
+.fp-gen-dots span{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:blink 1.2s infinite}
+.fp-gen-dots span:nth-child(2){animation-delay:.2s}
+.fp-gen-dots span:nth-child(3){animation-delay:.4s}
+.fp-footer{padding:11px 14px;border-top:0.5px solid var(--border);display:flex;gap:7px}
+.fp-send{flex:1;background:var(--blue);color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.fp-send:hover{background:var(--blue-d)}
+.fp-send:disabled{background:#b0c4e8;cursor:not-allowed}
+.fp-skip{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:7px;padding:8px 13px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.fp-done{padding:20px 14px;text-align:center}
+.fp-done-icon{width:48px;height:48px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.fp-done-icon svg{width:22px;height:22px;fill:var(--green)}
+.fp-done-title{font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:5px}
+.fp-done-sub{font-size:12px;color:var(--muted);line-height:1.5}
+
+.toast{position:fixed;bottom:80px;right:18px;background:#1e293b;color:#fff;border-radius:9px;padding:9px 16px;font-size:12px;z-index:9999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;max-width:300px;line-height:1.5}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sb">
+    <div class="sb-logo">
+      <div class="sb-marks"><span class="sm1"></span><span class="sm2"></span><span class="sm3"></span></div>
+      <span class="sb-brand">carerix</span>
+    </div>
+    <div class="sb-sect">Activities</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 1h12v2H1zm0 4h9v2H1zm0 4h7v2H1z"/></svg>E-mail</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="7" cy="7" r="5.5"/><path d="M7 4v3l2 1.5"/></svg>WhatsApp</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="12" height="12" rx="1" opacity=".25"/><path d="M4 7h6M4 9.5h4"/></svg>Tasks<span class="sb-badge">3</span></div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="2.5" width="12" height="10" rx="1"/><path d="M4.5 1v3M9.5 1v3M1 6h12"/></svg>Calendar</div>
+    <div class="sb-sect">Files</div>
+    <div class="sb-item" onclick="navTo(this,'page-matches')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 7l3.5-4.5 3.5 4.5M4 12V8h5v4"/></svg>Matches</div>
+    <div class="sb-item" onclick="navTo(this,'page-candidates')"><svg viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="4.5" r="2.5" opacity=".4"/><path d="M1 12.5c0-2.8 2.7-4.5 6-4.5s6 1.7 6 4.5" opacity=".5"/></svg>Candidates</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="10" height="9" rx="1"/><path d="M5 3V2a2 2 0 0 1 4 0v1"/></svg>Opportunities</div>
+    <div class="sb-item" onclick="navTo(this,'page-jobs')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="2" width="12" height="10" rx="1"/><path d="M4 6h6M4 8.5h4"/></svg>Jobs</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="4.5" r="2.5" opacity=".4"/><path d="M1 12.5c0-2.8 2.7-4.5 6-4.5s6 1.7 6 4.5" opacity=".5"/></svg>Contacts</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="1" width="12" height="12" rx="1"/><path d="M4 4h6M4 7h6M4 10h4"/></svg>Companies</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="4" width="10" height="8" rx="1"/><path d="M5 4V3a2 2 0 0 1 4 0v1"/></svg>Placements</div>
+    <div class="sb-sect">Management</div>
+    <div class="sb-item" onclick="navTo(this,'page-activities')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="7" cy="7" r="2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2"/></svg>Settings</div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-ctx">Sanchez, Melanie <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="var(--blue)" stroke-width="1.5"/></svg></div>
+      <div class="tb-filters">
+        <div class="tb-pill">Match ▾</div><div class="tb-pill">Lead/Opportunity/Job ▾</div>
+        <div class="tb-pill">Contact ▾</div><div class="tb-pill">Company ▾</div>
+        <div class="tb-pill">Placement ▾</div><div class="tb-pill">Activity ▾</div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-icon"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M13 13l3 3"/></svg></div>
+        <div class="tb-icon"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2a5 5 0 0 1 5 5v3l2 2v1H2v-1l2-2V7a5 5 0 0 1 5-5zM7 15a2 2 0 0 0 4 0"/></svg><div class="notif-dot"></div></div>
+        <div class="tb-av">PK</div><span class="tb-user">Pieter Kemper</span>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab" data-page="page-activities" onclick="switchTab(this)">Activities</div>
+      <div class="tab active" data-page="page-assistant" onclick="switchTab(this)"><div class="ai-pulse"></div>My assistant<span class="tab-badge" id="tabBadge">8</span></div>
+      <div class="tab" data-page="page-matches" onclick="switchTab(this)">Matches</div>
+      <div class="tab" data-page="page-candidates" onclick="switchTab(this)">Candidates</div>
+      <div class="tab" data-page="page-jobs" onclick="switchTab(this)">Jobs</div>
+      <div class="tab" data-page="page-placements" onclick="switchTab(this)">Placements</div>
+      <div class="tab" data-page="page-opportunities" onclick="switchTab(this)">Opportunities</div>
+    </div>
+
+    <!-- MY ASSISTANT -->
+    <div class="page active" id="page-assistant">
+
+      <div class="ask-wrap">
+        <div class="ask-head">
+          <div class="ask-glow"></div>
+          <span class="ask-title-text">Ask Carerix</span>
+          <span class="ask-model">claude-sonnet-4-20250514</span>
+        </div>
+        <div class="chat-log" id="chatLog">
+          <div class="cmsg ai">
+            <div class="cav cav-ai">CX</div>
+            <div class="cbub cbub-ai">Hoi Pieter! Ik heb vandaag <strong>8 suggesties</strong> voor je. Geef me een opdracht — ik stel het concept op, jij keurt goed en verstuurt. Probeer bijv: <em>"zoek twee kandidaten voor werkvoorbereider Rotterdam"</em> of <em>"staat Oranjegroep al in de database?"</em></div>
+          </div>
+        </div>
+        <div class="ask-chips" id="askChips">
+          <button class="chip" onclick="chipSend(this,'Wat moet ik vandaag als eerste oppakken?')">Wat eerst oppakken?</button>
+          <button class="chip" onclick="chipSend(this,'Ik heb een nieuwe vacature als werkvoorbereider bouw in Rotterdam. Zoek de twee beste kandidaten en match ze alvast voor me op de fase gevonden in Carerix')">Kandidaten voor werkvoorbereider Rotterdam</button>
+          <button class="chip" onclick="chipSend(this,'Staat klant Oranjegroep al in de database? Zo nee, maak het bedrijf dan aan.')">Oranjegroep in database?</button>
+          <button class="chip" onclick="chipSend(this,'Schrijf een statusmail aan Spie NL over de openstaande vacature')">Statusmail Spie NL</button>
+        </div>
+        <div class="ask-input-row">
+          <input class="ask-inp" id="askInput" placeholder="Stel een vraag of geef een opdracht..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askSend()}"/>
+          <button class="send-btn" id="askSendBtn" onclick="askSend()"><svg viewBox="0 0 16 16"><path d="M1 8L15 1 9 15 7 9z"/></svg></button>
+        </div>
+        <div class="ask-ctx">
+          <span class="ctx-lbl">Context:</span>
+          <span class="ctx-tag">Pieter Kemper</span>
+          <span class="ctx-tag">Profiel: Sanchez, Melanie</span>
+          <span class="ctx-tag" id="ctxTag">8 AI-suggesties open</span>
+          <span class="ctx-tag">18 mrt 2026</span>
+        </div>
+      </div>
+
+      <div class="sec-head">
+        <span class="sec-title">AI-suggesties voor jou</span>
+        <span class="sec-cnt" id="cardCnt">8 acties</span>
+      </div>
+
+      <div class="cards-grid" id="cardsGrid">
+        <div class="acard" id="c1"><div class="cbadge b-alert"><span class="urg u-h"></span>Actie vereist</div><div class="ctitle">Kandidaat solliciteerde 3 dagen geleden — nog niet opgepakt</div><div class="cdesc">Lisa Vermeer reageerde op Software Developer bij Accenture. Geen opvolging.</div><div class="cmeta"><div class="cmeta-av" style="background:#fee2e2;color:#991b1b">LV</div><span class="cmeta-name">Lisa Vermeer</span><span class="cmeta-date">15 mrt</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c1','mail','Lisa Vermeer','Software Developer bij Accenture','l.vermeer@email.nl')">Plan intake in</button><button class="btn-d" onclick="dismissCard('c1')">Negeren</button></div></div>
+        <div class="acard" id="c2"><div class="cbadge b-mail"><span class="urg u-m"></span>Statusmail</div><div class="ctitle">Beloofde update aan Spie NL — al 1 maand geleden</div><div class="cdesc">Op 14 feb zei je dat je Karel de Vries een update zou sturen.</div><div class="cmeta"><div class="cmeta-av" style="background:var(--purple-l);color:#5b21b6">SP</div><span class="cmeta-name">Spie NL – Karel de Vries</span><span class="cmeta-date">14 feb</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c2','mail','Karel de Vries','Statusupdate vacature Spie NL','k.devries@spie.nl')">Mail opstellen</button><button class="btn-d" onclick="dismissCard('c2')">Negeren</button></div></div>
+        <div class="acard" id="c3"><div class="cbadge b-match"><span class="urg u-l"></span>Nieuwe match</div><div class="ctitle">3 potentiële matches voor Senior Java Developer</div><div class="cdesc">Thomas Berg (91%), Yara Said (88%) en Piotr Nowak (84%) sterk op skills.</div><div class="cmeta"><div class="cmeta-av" style="background:var(--green-l);color:#166534">TW</div><span class="cmeta-name">TechWereld BV</span><span class="cmeta-date">Vandaag</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c3','match','TechWereld BV','Senior Java Developer','')">Matches bekijken</button><button class="btn-d" onclick="dismissCard('c3')">Negeren</button></div></div>
+        <div class="acard" id="c4"><div class="cbadge b-transcript"><span class="urg u-m"></span>Transcript</div><div class="ctitle">Transcript 17 mrt: vacature voorleggen aan Sofia Reyes</div><div class="cdesc">Afgesproken de Capgemini-vacature voor te leggen. Nog niet gedaan.</div><div class="cmeta"><div class="cmeta-av" style="background:var(--green-l);color:#166534">SR</div><span class="cmeta-name">Sofia Reyes</span><span class="cmeta-date">17 mrt</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c4','mail','Sofia Reyes','Vacature Capgemini voorleggen','s.reyes@email.nl')">Mail opstellen</button><button class="btn-d" onclick="dismissCard('c4')">Negeren</button></div></div>
+        <div class="acard" id="c5"><div class="cbadge b-followup"><span class="urg u-h"></span>Follow-up</div><div class="ctitle">Thomas Berg introduceren volgende week — taak aanmaken?</div><div class="cdesc">Introductiemail al opgesteld. Wil je ook een opvolgtaak plannen?</div><div class="cmeta"><div class="cmeta-av" style="background:var(--pink-l);color:#9d174d">TB</div><span class="cmeta-name">Thomas Berg</span><span class="cmeta-date">Vandaag</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c5','task','Thomas Berg','Introductie plannen bij TechWereld','')">Taak aanmaken</button><button class="btn-d" onclick="dismissCard('c5')">Negeren</button></div></div>
+        <div class="acard" id="c6"><div class="cbadge b-quality"><span class="urg u-m"></span>Datakwaliteit</div><div class="ctitle">Profiel James Hoekstra incompleet — 4 velden missen</div><div class="cdesc">Mobiel, LinkedIn, salaris en functietitel ontbreken. CV ouder dan 6 mnd.</div><div class="cmeta"><div class="cmeta-av" style="background:var(--amber-l);color:#92400e">JH</div><span class="cmeta-name">James Hoekstra</span><span class="cmeta-date">Sep 2025</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c6','mail','James Hoekstra','Profiel bijwerken verzoek','j.hoekstra@email.nl')">Verzoek sturen</button><button class="btn-d" onclick="dismissCard('c6')">Negeren</button></div></div>
+        <div class="acard" id="c7"><div class="cbadge b-transcript"><span class="urg u-l"></span>Transcript</div><div class="ctitle">Valideer gesprek Melanie Sanchez — 11 velden</div><div class="cdesc">AI heeft het transcript van 17 mrt verwerkt. Controleer de velden.</div><div class="cmeta"><div class="cmeta-av" style="background:var(--blue-l);color:var(--blue-d)">MS</div><span class="cmeta-name">Melanie Sanchez</span><span class="cmeta-date">17 mrt</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c7','transcript','Melanie Sanchez','11 velden valideren','')">Valideren</button><button class="btn-d" onclick="dismissCard('c7')">Negeren</button></div></div>
+        <div class="acard" id="c8"><div class="cbadge b-match"><span class="urg u-l"></span>Nieuwe match</div><div class="ctitle">Yara Said matcht 94% op UX Designer bij KPMG</div><div class="cdesc">Skills, beschikbaarheid en salaris kloppen. Geen actieve gesprekken.</div><div class="cmeta"><div class="cmeta-av" style="background:var(--purple-l);color:#5b21b6">YS</div><span class="cmeta-name">Yara Said</span><span class="cmeta-date">Vandaag</span></div><div class="cactions"><button class="btn-p" onclick="openPanel('c8','match','Yara Said','UX Designer bij KPMG','')">Match aanmaken</button><button class="btn-d" onclick="dismissCard('c8')">Negeren</button></div></div>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none"><div class="empty-icon"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></div><div style="font-size:14px;font-weight:500;color:#374151;margin-bottom:5px">Alles afgehandeld voor vandaag!</div><p style="font-size:12px">Morgen kijkt Carerix opnieuw voor je.</p></div>
+    </div>
+
+    <div class="page" id="page-activities"><div class="placeholder-page"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="32" height="32" rx="4"/><path d="M12 14h16M12 20h12M12 26h8"/></svg><p>Activities — coming soon</p></div></div>
+    <div class="page" id="page-matches"><div class="placeholder-page"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 20l6-8 6 8M16 28V20h8v8"/></svg><p>Matches — coming soon</p></div></div>
+    <div class="page" id="page-candidates"><div class="placeholder-page"><svg viewBox="0 0 40 40" fill="currentColor"><circle cx="20" cy="14" r="7" opacity=".4"/><path d="M6 36c0-7.7 6.3-13 14-13s14 5.3 14 13" opacity=".5"/></svg><p>Candidates — coming soon</p></div></div>
+    <div class="page" id="page-jobs"><div class="placeholder-page"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="8" width="32" height="26" rx="3"/><path d="M14 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg><p>Jobs — coming soon</p></div></div>
+    <div class="page" id="page-placements"><div class="placeholder-page"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="32" height="24" rx="3"/><path d="M14 10V7a3 3 0 0 1 12 0v3"/></svg><p>Placements — coming soon</p></div></div>
+    <div class="page" id="page-opportunities"><div class="placeholder-page"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="20" cy="20" r="14"/><path d="M20 12v8l6 4"/></svg><p>Opportunities — coming soon</p></div></div>
+  </div>
+</div>
+
+<!-- FLOATING PANEL -->
+<div class="fp hidden" id="fp">
+  <div class="fp-head" id="fpHead">
+    <div class="fp-icon" id="fpIcon"><svg viewBox="0 0 16 16" fill="white"><path d="M2 3h12v2.5L8 9.5 2 5.5z"/><path d="M2 6v8h12V6"/></svg></div>
+    <div class="fp-htext"><div class="fp-title" id="fpTitle">Actie uitvoeren</div><div class="fp-sub" id="fpSub">Carerix assistent</div></div>
+    <div class="fp-ctrls">
+      <button class="fp-btn fp-min-btn" onclick="toggleMin()">—</button>
+      <button class="fp-btn fp-cls-btn" onclick="closePanel()">✕</button>
+    </div>
+  </div>
+  <div class="fp-mini-row" onclick="toggleMin()">
+    <div class="mini-pulse"></div>
+    <span class="mini-lbl" id="miniLbl">Actie bezig</span>
+    <span class="mini-cnt" id="miniCnt">1 open</span>
+  </div>
+  <div class="fp-progress" id="fpProgress">
+    <div class="fp-prog-steps"><div class="fp-step done" id="fps1"></div><div class="fp-step cur" id="fps2"></div><div class="fp-step" id="fps3"></div></div>
+    <div class="fp-prog-lbl" id="fpProgLbl">Stap 2 van 3 — AI stelt concept op…</div>
+  </div>
+  <div class="fp-body" id="fpBody"></div>
+  <div class="fp-footer" id="fpFooter">
+    <button class="fp-skip" onclick="skipPanel()">Overslaan</button>
+    <button class="fp-send" id="fpSendBtn" onclick="sendPanel()">✓ Verstuur & volgende</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA MODEL ──
+var DB = {
+  companies: ['Spie NL','TechWereld BV','Capgemini','KPMG','Accenture','Randstad','Philips','Shell','ING Bank','ABN AMRO'],
+  candidates: [
+    {name:'Lisa Vermeer',role:'Software Developer',loc:'Amsterdam',skills:['Java','React','AWS'],avail:'per direct',sal:'€4.200-4.800',score:0},
+    {name:'Thomas Berg',role:'Senior Java Developer',loc:'Rotterdam',skills:['Java','Spring','Microservices'],avail:'per 1 mei',sal:'€5.000-5.800',score:91},
+    {name:'Yara Said',role:'UX Designer',loc:'Utrecht',skills:['Figma','User research','Prototyping'],avail:'per direct',sal:'€4.500-5.000',score:94},
+    {name:'Sofia Reyes',role:'Project Manager',loc:'Amsterdam',skills:['Agile','Scrum','PMP'],avail:'per 1 apr',sal:'€5.200-6.000',score:0},
+    {name:'James Hoekstra',role:'Business Analyst',loc:'Den Haag',skills:['SQL','PowerBI','Stakeholder mgmt'],avail:'per direct',sal:'€4.800-5.500',score:0},
+    {name:'Piotr Nowak',role:'Backend Developer',loc:'Rotterdam',skills:['Java','Docker','Kubernetes'],avail:'per 1 juni',sal:'€4.600-5.200',score:84},
+    {name:'Melanie Sanchez',role:'Senior Recruiter',loc:'Amsterdam',skills:['Recruitment','Sourcing','LinkedIn'],avail:'per 1 mei',sal:'€4.800-5.500',score:0},
+    {name:'Marco Janssen',role:'Werkvoorbereider Bouw',loc:'Rotterdam',skills:['AutoCAD','Calculatie','Bouwbestek'],avail:'per direct',sal:'€4.000-4.600',score:0},
+    {name:'Inge de Vries',role:'Werkvoorbereider Infra',loc:'Rotterdam',skills:['GIS','Planvorming','Infra bouw'],avail:'per 15 apr',sal:'€3.800-4.400',score:0},
+    {name:'Sander Pietersen',role:'Uitvoerder Bouw',loc:'Dordrecht',skills:['Werkvoorbereiding','CROW','Veiligheid'],avail:'per direct',sal:'€4.200-4.800',score:0}
+  ]
+};
+
+var chatHistory = [];
+var isAsking = false;
+var currentCard = null;
+var isMin = false;
+var dragOn = false, dox = 0, doy = 0;
+
+var SYSTEM = "Je bent de ingebouwde AI-assistent van Carerix, een recruitmentplatform. Gebruiker: Pieter Kemper, recruiter. Datum: 18 maart 2026. Profiel open: Melanie Sanchez.\n\nDatabase kandidaten: Lisa Vermeer (Software Developer Amsterdam), Thomas Berg (Senior Java Developer Rotterdam, 91% match), Yara Said (UX Designer Utrecht, 94% match), Sofia Reyes (Project Manager Amsterdam), James Hoekstra (Business Analyst Den Haag, profiel incompleet), Piotr Nowak (Backend Developer Rotterdam, 84% match), Marco Janssen (Werkvoorbereider Bouw Rotterdam, per direct beschikbaar), Inge de Vries (Werkvoorbereider Infra Rotterdam, per 15 apr), Sander Pietersen (Uitvoerder Bouw Dordrecht).\n\nBedrijven in database: Spie NL (Karel de Vries), TechWereld BV, Capgemini, KPMG, Accenture, Randstad, Philips, Shell, ING Bank, ABN AMRO.\n\nAntwoord ALTIJD in het Nederlands. Wees beknopt. Als gevraagd wordt om een mail: schrijf direct een volledig concept. Als gevraagd wordt om kandidaten te zoeken: geef een overzicht met naam, score en redenering. Als gevraagd wordt of een bedrijf in de database staat: check de lijst en geef een duidelijk ja/nee antwoord met vervolgactie.";
+
+// ── INTENT ENGINE ──
+// Recognizes Carerix-specific intents and builds rich visual responses
+var intents = [
+  {
+    id: 'find_candidates',
+    test: function(t){ return /werkvoorbereider|kandidaat.*zoek|zoek.*kandidaat|match.*vacature|beste kandidaten|twee kandidaten/i.test(t); },
+    handle: function(text) {
+      var isRotterdam = /rotterdam/i.test(text);
+      var isBouw = /bouw|werkvoorbereider/i.test(text);
+      var role = isBouw ? 'Werkvoorbereider Bouw' : 'kandidaat';
+      var matches = isBouw
+        ? [{name:'Marco Janssen',role:'Werkvoorbereider Bouw',loc:'Rotterdam',score:'92%',avail:'Per direct',skills:['AutoCAD','Calculatie','Bouwbestek'],bg:'#dcfce7',tc:'#166534',av:'MJ'},
+           {name:'Inge de Vries',role:'Werkvoorbereider Infra',loc:'Rotterdam',score:'87%',avail:'Per 15 april',skills:['GIS','Planvorming','Infra bouw'],bg:'#e8f0fe',tc:'#1557b0',av:'ID'}]
+        : [{name:'Thomas Berg',role:'Senior Java Developer',loc:'Rotterdam',score:'91%',avail:'Per 1 mei',skills:['Java','Spring'],bg:'#fce7f3',tc:'#9d174d',av:'TB'},
+           {name:'Piotr Nowak',role:'Backend Developer',loc:'Rotterdam',score:'84%',avail:'Per 1 juni',skills:['Java','Docker'],bg:'#dcfce7',tc:'#166534',av:'PN'}];
+
+      return buildMatchRichCard(
+        'Ik heb ' + matches.length + ' sterke kandidaten gevonden voor ' + role + (isRotterdam?' in Rotterdam':'') + ':',
+        matches,
+        'Matches aanmaken voor beide kandidaten?',
+        function(wrap){ wrap.remove(); toast('✓ Matches aangemaakt in Carerix'); }
+      );
+    }
+  },
+  {
+    id: 'lookup_company',
+    test: function(t){ return /staat.*database|in de database|bedrijf.*aanmaken|aanmaken.*bedrijf|oranjegroep|klant.*zoek|zoek.*klant/i.test(t); },
+    handle: function(text) {
+      var companyMatch = text.match(/(?:klant\s+|bedrijf\s+)?([A-Z][a-zA-Z\s]+?)(?:\s+al|\s+in|\s+staat|$)/);
+      var company = companyMatch ? companyMatch[1].trim() : 'Oranjegroep';
+      if(company.split(' ').length > 4) company = 'Oranjegroep';
+      var found = DB.companies.some(function(c){ return c.toLowerCase().indexOf(company.toLowerCase()) > -1; });
+
+      return buildLookupCard(company, found);
+    }
+  },
+  {
+    id: 'priority',
+    test: function(t){ return /wat moet|eerst|prioriteit|vandaag.*doen|doen.*vandaag|nu doen/i.test(t); },
+    handle: function(text) {
+      return buildPriorityCard();
+    }
+  },
+  {
+    id: 'whatsapp',
+    test: function(t){ return /whatsapp|whats app|app.*sturen|stuur.*app/i.test(t); },
+    handle: function(text) {
+      var nameMatch = text.match(/(?:aan|naar)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+      var name = nameMatch ? nameMatch[1] : 'de kandidaat';
+      return buildWhatsAppCard(name, text);
+    }
+  }
+];
+
+function buildMatchRichCard(intro, matches, actionLabel, onConfirm) {
+  var wrap = document.createElement('div');
+  wrap.className = 'cmsg ai';
+  var av = document.createElement('div'); av.className = 'cav cav-ai'; av.textContent = 'CX';
+  var card = document.createElement('div'); card.className = 'rich-card';
+
+  var html = '<div class="rich-title"><svg viewBox="0 0 14 14" fill="var(--blue)"><path d="M7 1l1.5 3 3.5.5-2.5 2.5.5 3.5L7 9l-3 1.5.5-3.5L2 4.5l3.5-.5z"/></svg>' + intro + '</div>';
+  matches.forEach(function(m){
+    html += '<div class="rich-item"><div class="rich-av" style="background:'+m.bg+';color:'+m.tc+'">'+m.av+'</div>' +
+      '<div class="rich-info"><div class="rich-name">'+m.name+'</div><div class="rich-detail">'+m.role+' · '+m.loc+' · '+m.avail+'</div>' +
+      '<div>'+m.skills.map(function(s){return '<span class="rich-tag">'+s+'</span>'}).join('')+'</div></div>' +
+      '<div><div class="rich-score">'+m.score+'</div><div class="rich-score-lbl">match</div></div></div>';
+  });
+  html += '<div class="rich-actions"><button class="rich-btn-p" id="matchConfirmBtn">✓ ' + actionLabel + '</button><button class="rich-btn-s">Bekijk profielen</button></div>';
+  card.innerHTML = html;
+
+  card.querySelector('#matchConfirmBtn').onclick = function(){
+    card.querySelector('.rich-actions').innerHTML = '<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--green)"><svg width="14" height="14" viewBox="0 0 14 14" fill="var(--green)"><path d="M2 7l3.5 3.5 6.5-6.5"/></svg>Beide matches aangemaakt in Carerix — fase: Gevonden</div>';
+    toast('✓ ' + matches.length + ' matches aangemaakt');
+    // add follow-up suggestion
+    setTimeout(function(){
+      appendActionBubble(
+        '💡 Volgende stap: introductiemail',
+        'Wil je een introductiemail sturen naar de klant met de kandidaatprofielen?',
+        function(){ openPanel('c3','mail',matches[0].name,'Introductie kandidaten aan klant','klant@bedrijf.nl'); }
+      );
+    }, 600);
+  };
+
+  wrap.appendChild(av); wrap.appendChild(card);
+  return wrap;
+}
+
+function buildLookupCard(company, found) {
+  var wrap = document.createElement('div');
+  wrap.className = 'cmsg ai';
+  var av = document.createElement('div'); av.className = 'cav cav-ai'; av.textContent = 'CX';
+  var card = document.createElement('div'); card.className = 'rich-card';
+
+  var html = '<div class="rich-title"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="6" cy="6" r="4"/><path d="M10 10l3 3"/></svg>Database-check: ' + company + '</div>';
+
+  if(found){
+    html += '<div class="rich-status-row"><div class="status-dot status-found"></div><strong>' + company + '</strong> staat al in de database</div>' +
+      '<div class="rich-actions"><button class="rich-btn-p" onclick="toast(\'Opening bedrijfsprofiel...\')">Profiel openen</button><button class="rich-btn-s">Contacten bekijken</button></div>';
+  } else {
+    html += '<div class="rich-status-row"><div class="status-dot status-notfound"></div><strong>' + company + '</strong> staat nog niet in de database</div>' +
+      '<div class="create-form" id="createForm">' +
+      '<div class="create-form-title">Bedrijf aanmaken</div>' +
+      '<div class="create-field"><div class="create-label">Bedrijfsnaam</div><input class="create-input" value="' + company + '"/></div>' +
+      '<div class="create-field"><div class="create-label">Branche</div><input class="create-input" placeholder="bijv. Bouw, IT, Finance..."/></div>' +
+      '<div class="create-field"><div class="create-label">Locatie</div><input class="create-input" placeholder="Stad"/></div>' +
+      '<div class="create-field"><div class="create-label">Contactpersoon</div><input class="create-input" placeholder="Naam contactpersoon"/></div>' +
+      '</div>' +
+      '<div class="rich-actions"><button class="rich-btn-p" id="createCompanyBtn">✓ Bedrijf aanmaken</button><button class="rich-btn-s">Annuleren</button></div>';
+  }
+
+  card.innerHTML = html;
+  if(!found){
+    card.querySelector('#createCompanyBtn').onclick = function(){
+      var nameVal = card.querySelector('.create-input').value;
+      DB.companies.push(nameVal);
+      card.innerHTML = '<div class="rich-title"><svg viewBox="0 0 14 14" fill="var(--green)"><path d="M2 7l3.5 3.5 6.5-6.5"/></svg>Bedrijf aangemaakt</div>' +
+        '<div class="steps-list">' +
+        '<div class="step-row done"><div class="step-num">✓</div><span>' + nameVal + ' aangemaakt in database</span></div>' +
+        '<div class="step-row done"><div class="step-num">✓</div><span>Basis bedrijfsprofiel ingevuld</span></div>' +
+        '<div class="step-row"><div class="step-num">3</div><span>Contactpersoon toevoegen</span></div>' +
+        '<div class="step-row"><div class="step-num">4</div><span>Eerste vacature aanmaken</span></div>' +
+        '</div>' +
+        '<div class="rich-actions"><button class="rich-btn-p" onclick="toast(\'Opening ' + nameVal + ' profiel...\')">Profiel openen</button></div>';
+      toast('✓ ' + nameVal + ' aangemaakt in Carerix');
+    };
+  }
+
+  wrap.appendChild(av); wrap.appendChild(card);
+  return wrap;
+}
+
+function buildPriorityCard() {
+  var wrap = document.createElement('div');
+  wrap.className = 'cmsg ai';
+  var av = document.createElement('div'); av.className = 'cav cav-ai'; av.textContent = 'CX';
+  var card = document.createElement('div'); card.className = 'rich-card';
+  card.innerHTML = '<div class="rich-title"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M7 1v6l4 2"/><circle cx="7" cy="7" r="6"/></svg>Top 3 voor vandaag</div>' +
+    '<div class="steps-list" style="gap:8px">' +
+    '<div class="step-row"><div class="step-num" style="background:#fee2e2;color:#991b1b">1</div><span><strong>Lisa Vermeer</strong> — sollicitatie 3 dagen geleden, nog niet beantwoord</span></div>' +
+    '<div class="step-row"><div class="step-num" style="background:#fef3c7;color:#92400e">2</div><span><strong>Spie NL</strong> — update beloofd 1 maand geleden aan Karel de Vries</span></div>' +
+    '<div class="step-row"><div class="step-num" style="background:#fef3c7;color:#92400e">3</div><span><strong>Sofia Reyes</strong> — Capgemini vacature nog voor te leggen (gepland 18 mrt)</span></div>' +
+    '</div>' +
+    '<div class="rich-actions"><button class="rich-btn-p" onclick="openPanel(\'c1\',\'mail\',\'Lisa Vermeer\',\'Software Developer bij Accenture\',\'l.vermeer@email.nl\')">Start met #1</button><button class="rich-btn-s">Alles bekijken</button></div>';
+  wrap.appendChild(av); wrap.appendChild(card);
+  return wrap;
+}
+
+function buildWhatsAppCard(name, text) {
+  var wrap = document.createElement('div');
+  wrap.className = 'cmsg ai';
+  var av = document.createElement('div'); av.className = 'cav cav-ai'; av.textContent = 'CX';
+  var card = document.createElement('div'); card.className = 'rich-card';
+  var msg = 'Hoi ' + name.split(' ')[0] + '! 👋 Ik wilde even checken — hoe is je beschikbaarheid de komende weken? We hebben mogelijk iets interessants voor je. Hoor graag van je!';
+  card.innerHTML = '<div class="rich-title"><svg viewBox="0 0 14 14" fill="var(--green)"><path d="M7 1C3.7 1 1 3.4 1 6.4c0 1.3.5 2.5 1.3 3.5L1 13l3.3-1.1c.8.4 1.7.6 2.7.6 3.3 0 6-2.4 6-5.4S10.3 1 7 1z"/></svg>WhatsApp concept voor ' + name + '</div>' +
+    '<div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#166534;margin:4px 0 10px;line-height:1.6">' + msg + '</div>' +
+    '<div class="rich-actions"><button class="rich-btn-p" id="sendWA">✓ Verstuur WhatsApp</button><button class="rich-btn-s">Bewerken</button></div>';
+  card.querySelector('#sendWA').onclick = function(){
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:6px 0"><div style="width:28px;height:28px;border-radius:50%;background:var(--green-l);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 14 14" fill="var(--green)"><path d="M2 7l3.5 3.5 6.5-6.5"/></svg></div><div><div style="font-size:12px;font-weight:600;color:#1a1a2e">Taak voltooid</div><div style="font-size:11px;color:var(--muted)">' + name + ' heeft een WhatsApp ontvangen</div></div></div>';
+    toast('✓ WhatsApp verstuurd aan ' + name);
+  };
+  wrap.appendChild(av); wrap.appendChild(card);
+  return wrap;
+}
+
+// ── CHAT FUNCTIONS ──
+function appendChatMsg(role, text) {
+  var log = document.getElementById('chatLog');
+  var wrap = document.createElement('div');
+  wrap.className = 'cmsg ' + (role==='user'?'user':'ai');
+  var av = document.createElement('div');
+  av.className = 'cav '+(role==='user'?'cav-u':'cav-ai');
+  av.textContent = role==='user'?'PK':'CX';
+  var bub = document.createElement('div');
+  bub.className = 'cbub '+(role==='user'?'cbub-u':'cbub-ai');
+  bub.style.whiteSpace = 'pre-wrap'; bub.textContent = text;
+  wrap.appendChild(av); wrap.appendChild(bub);
+  log.appendChild(wrap); log.scrollTop = log.scrollHeight;
+}
+
+function appendEl(el) {
+  var log = document.getElementById('chatLog');
+  log.appendChild(el); log.scrollTop = log.scrollHeight;
+}
+
+function appendActionBubble(title, desc, onYes) {
+  var log = document.getElementById('chatLog');
+  var wrap = document.createElement('div');
+  wrap.className = 'cmsg ai';
+  var av = document.createElement('div'); av.className = 'cav cav-ai'; av.textContent = 'CX';
+  var card = document.createElement('div'); card.className = 'rich-card';
+  card.style.maxWidth = '92%';
+  card.innerHTML = '<div class="rich-title">'+title+'</div><div style="font-size:11.5px;color:var(--muted);margin-bottom:9px;line-height:1.5">'+desc+'</div>' +
+    '<div class="rich-actions">' +
+    (onYes?'<button class="rich-btn-p" id="fuYes">Ja, open actievenster</button>':'') +
+    '<button class="rich-btn-s" id="fuNo">Nee, dank je</button></div>';
+  if(onYes) card.querySelector('#fuYes').onclick = function(){ wrap.remove(); onYes(); };
+  card.querySelector('#fuNo').onclick = function(){ wrap.remove(); };
+  wrap.appendChild(av); wrap.appendChild(card);
+  log.appendChild(wrap); log.scrollTop = log.scrollHeight;
+}
+
+function showTyping() {
+  var log = document.getElementById('chatLog');
+  var w = document.createElement('div');
+  w.className = 'cmsg ai'; w.id = 'typingRow';
+  var av = document.createElement('div'); av.className = 'cav cav-ai'; av.textContent = 'CX';
+  var t = document.createElement('div'); t.className = 'typing-wrap';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  w.appendChild(av); w.appendChild(t);
+  log.appendChild(w); log.scrollTop = log.scrollHeight;
+}
+function removeTyping(){ var t=document.getElementById('typingRow'); if(t) t.remove(); }
+
+// ── MAIN SEND LOGIC ──
+function chipSend(btn, text){ btn.disabled=true; btn.style.opacity='.4'; doAsk(text); }
+function askSend(){ var i=document.getElementById('askInput'),v=i.value.trim(); if(!v||isAsking)return; i.value=''; doAsk(v); }
+
+async function doAsk(text) {
+  if(isAsking) return;
+  isAsking = true;
+  document.getElementById('askSendBtn').disabled = true;
+  appendChatMsg('user', text);
+  chatHistory.push({role:'user', content:text});
+  showTyping();
+
+  // 1. Check local intent engine first (always works, no API needed)
+  var matched = null;
+  for(var i=0;i<intents.length;i++){
+    if(intents[i].test(text)){ matched = intents[i]; break; }
+  }
+
+  if(matched) {
+    // Simulate brief thinking delay
+    await delay(700 + Math.random()*400);
+    removeTyping();
+    var el = matched.handle(text);
+    appendEl(el);
+    chatHistory.push({role:'assistant', content:'[Carerix actie uitgevoerd]'});
+    isAsking = false;
+    document.getElementById('askSendBtn').disabled = false;
+    return;
+  }
+
+  // 2. Fall back to API for general questions
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        system:SYSTEM,
+        messages:chatHistory
+      })
+    });
+    var data = await res.json();
+    removeTyping();
+    var reply = data.content&&data.content[0]&&data.content[0].text ? data.content[0].text : null;
+    if(!reply) throw new Error('no content');
+    var clean = reply.replace(/💡 FOLLOWUP:.*$/s,'').trim();
+    appendChatMsg('ai', clean);
+    chatHistory.push({role:'assistant', content:reply});
+
+    // offer action panel if mail-like
+    if(/\bhoi\b|\bgeachte\b|\bmet vriendelijke groet\b/i.test(clean) && clean.length > 150) {
+      setTimeout(function(){
+        appendActionBubble('Mail concept klaar','Wil je dit openen in het actievenster om te bewerken en versturen?',
+          function(){ openPanel('c2','mail','ontvanger','Gebaseerd op je vraag',''); }
+        );
+      }, 400);
+    }
+  } catch(e) {
+    removeTyping();
+    // Friendly fallback — no "verbinding mislukt"
+    appendChatMsg('ai', 'Ik snap je vraag, maar ik kan dit nu niet via de API ophalen. Probeer een van de snelkeuzes bovenaan, of herformuleer je vraag.');
+  }
+
+  isAsking = false;
+  document.getElementById('askSendBtn').disabled = false;
+}
+
+function delay(ms){ return new Promise(function(r){setTimeout(r,ms)}); }
+
+// ── NAVIGATION ──
+function navTo(el, pageId){
+  document.querySelectorAll('.sb-item').forEach(function(i){i.classList.remove('active')});
+  el.classList.add('active');
+  showPage(pageId);
+  document.querySelectorAll('.tab').forEach(function(t){if(t.dataset.page===pageId)t.classList.add('active');else t.classList.remove('active')});
+}
+function switchTab(el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  showPage(el.dataset.page);
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');p.style.display='none'});
+  var pg=document.getElementById(id);
+  if(pg){pg.classList.add('active');pg.style.display='flex';}
+}
+
+// ── TOAST ──
+function toast(msg){
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show')},3000);
+}
+
+// ── CARD COUNT ──
+function updateCount(){
+  var vis=document.querySelectorAll('.acard:not([style*="display: none"])').length;
+  document.getElementById('cardCnt').textContent=vis+' acties';
+  document.getElementById('tabBadge').textContent=vis;
+  document.getElementById('ctxTag').textContent=vis+' AI-suggesties open';
+  if(vis===0) setTimeout(function(){document.getElementById('emptyState').style.display='block'},400);
+}
+function dismissCard(id){
+  var el=document.getElementById(id); el.classList.add('out-r');
+  setTimeout(function(){el.style.display='none';updateCount()},300);
+  toast('Suggestie verborgen');
+}
+
+// ── FLOATING PANEL ──
+function openPanel(cardId, type, name, context, email){
+  currentCard={id:cardId,type:type,name:name,context:context,email:email};
+  var p=document.getElementById('fp');
+  p.classList.remove('hidden','minimized'); isMin=false;
+  document.getElementById('fpProgress').style.display='flex';
+  document.getElementById('fpFooter').style.display='flex';
+  document.getElementById('fps1').className='fp-step done';
+  document.getElementById('fps2').className='fp-step cur';
+  document.getElementById('fps3').className='fp-step';
+  document.getElementById('fpProgLbl').textContent='Stap 2 van 3 — AI stelt concept op…';
+  var icons={mail:'<path d="M2 3h12v2.5L8 9.5 2 5.5z"/><path d="M2 6v8h12V6"/>',match:'<path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 1.9.7-4.1-3-2.9 4.2-.6z"/>',task:'<rect x="3" y="2" width="10" height="12" rx="1" opacity=".25"/><path d="M5 7l2 2 4-4"/>',transcript:'<rect x="2" y="2" width="12" height="12" rx="1" opacity=".25"/><path d="M5 6h6M5 8.5h6M5 11h4"/>'};
+  document.getElementById('fpIcon').innerHTML='<svg viewBox="0 0 16 16" fill="white">'+(icons[type]||icons.mail)+'</svg>';
+  var titles={mail:'Mail opstellen',match:'Match bevestigen',task:'Taak aanmaken',transcript:'Transcript valideren'};
+  var sendLbls={mail:'✓ Verstuur mail',match:'✓ Match aanmaken',task:'✓ Taak opslaan',transcript:'✓ Opslaan'};
+  document.getElementById('fpTitle').textContent=titles[type]||'Actie';
+  document.getElementById('fpSub').textContent=name+(context?' · '+context:'');
+  document.getElementById('miniLbl').textContent=(titles[type]||'Actie')+' · '+name;
+  document.getElementById('miniCnt').textContent='1 open';
+  document.getElementById('fpSendBtn').textContent=sendLbls[type]||'✓ Verstuur';
+  document.getElementById('fpSendBtn').disabled=true;
+  document.getElementById('fpBody').innerHTML='<div class="fp-generating"><div class="fp-gen-dots"><span></span><span></span><span></span></div>AI stelt concept op…</div>';
+  makeDraggable();
+  if(type==='mail') generateMail(name,context,email);
+  else if(type==='match') buildMatchBody();
+  else if(type==='task') buildTaskBody();
+  else if(type==='transcript') buildTranscriptBody();
+}
+
+async function generateMail(name, context, email){
+  var prompt='Schrijf een korte professionele recruitmentmail van Pieter Kemper aan '+name+' over: "'+context+'". Schrijf alleen de mailtekst: aanhef, body (2 alinea\'s max), afsluiting. Onderteken als Pieter Kemper, Carerix Recruitment.';
+  var mailText = null;
+
+  try {
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,system:SYSTEM,messages:[{role:'user',content:prompt}]})});
+    var data=await res.json();
+    if(data.content&&data.content[0]&&data.content[0].text) mailText=data.content[0].text;
+  } catch(e){}
+
+  // Always fall back to smart local template if API fails
+  if(!mailText){
+    var templates={
+      'Lisa Vermeer':'Hoi Lisa,\n\nBedankt voor je sollicitatie op de functie Software Developer bij Accenture. We zijn onder de indruk van je profiel en willen graag kennismaken.\n\nHeb je tijd voor een korte kennismaking deze week of volgende week? Dan vertel ik je meer over de functie en mogelijkheden.\n\nMet vriendelijke groet,\nPieter Kemper\nCarerix Recruitment',
+      'Karel de Vries':'Hoi Karel,\n\nIk wilde je even bijpraten over de openstaande vacature. We hebben inmiddels drie sterke kandidaten gesproken die goed bij jullie profielen passen.\n\nVolgende week verwacht ik de eerste cv\'s aan je voor te leggen. Mocht je eerder willen bellen, dan plan ik graag een moment in.\n\nMet vriendelijke groet,\nPieter Kemper\nCarerix Recruitment',
+      'Sofia Reyes':'Hoi Sofia,\n\nIk wilde je even informeren over een interessante vacature bij Capgemini die perfect aansluit bij jouw achtergrond in projectmanagement.\n\nZou je tijd hebben voor een korte toelichting? Dan leg ik je de details voor en kunnen we kijken of dit iets voor jou is.\n\nMet vriendelijke groet,\nPieter Kemper\nCarerix Recruitment',
+      'James Hoekstra':'Hoi James,\n\nIk zie dat je profiel in ons systeem al een tijdje niet bijgewerkt is. Om je goed te kunnen matchen met nieuwe kansen, zou ik graag een paar velden willen aanvullen.\n\nKun je me laten weten wat je huidige salaris is, je LinkedIn-URL en je gewenste functietitel? Dan kunnen we direct aan de slag.\n\nMet vriendelijke groet,\nPieter Kemper\nCarerix Recruitment'
+    };
+    mailText = templates[name] || 'Hoi '+name.split(' ')[0]+',\n\nIk wilde even contact opnemen over '+context+'.\n\nKun je me laten weten of je hiervoor beschikbaar bent?\n\nMet vriendelijke groet,\nPieter Kemper\nCarerix Recruitment';
+  }
+
+  var fuMap={'c1':'Taak: intake Lisa plannen na haar reactie','c2':'Opvolgtaak: bellen met Karel na ontvangst mail','c4':'Taak: reactie Sofia opvolgen over Capgemini','c6':'Reminder: profiel James checken over 1 week'};
+  renderMailPanel(name,email,context,mailText.replace(/💡 FOLLOWUP:.*$/s,'').trim(),fuMap[currentCard&&currentCard.id]||'Opvolgtaak aanmaken voor de reactie');
+  document.getElementById('fpProgLbl').textContent='Stap 2 van 3 — Controleer & bewerk';
+  document.getElementById('fpSendBtn').disabled=false;
+}
+
+function renderMailPanel(name,email,context,mailText,fuText){
+  document.getElementById('fpBody').innerHTML=
+    '<div class="fp-section"><div class="fp-sec-title">Aan</div><input class="fp-input" value="'+(email||name.toLowerCase().replace(/\s+/,'.')+'@email.nl')+'"/></div>'+
+    '<div class="fp-section"><div class="fp-sec-title">Onderwerp</div><input class="fp-input" value="'+context+'"/></div>'+
+    '<div class="fp-section"><div class="fp-sec-title">Bericht — AI-concept</div><textarea class="fp-textarea">'+mailText+'</textarea></div>'+
+    '<div class="fp-followup"><div class="fp-followup-title">💡 Carerix suggereert: vervolgtaak</div><div class="fp-followup-desc">'+fuText+'</div>'+
+    '<div class="fp-followup-btns"><button class="fu-yes" onclick="confirmFollowup(this,\''+fuText+'\')">Ja, taak aanmaken</button><button class="fu-no" onclick="this.closest(\'.fp-followup\').style.display=\'none\'">Overslaan</button></div></div>';
+}
+
+function confirmFollowup(btn,text){
+  btn.closest('.fp-followup').innerHTML='<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--green)"><svg width="13" height="13" viewBox="0 0 14 14" fill="var(--green)"><path d="M2 7l3.5 3.5 6.5-6.5"/></svg>Taak aangemaakt: '+text+'</div>';
+  toast('✓ Opvolgtaak aangemaakt');
+}
+
+function buildMatchBody(){
+  var isYara=currentCard.name==='Yara Said';
+  var cands=isYara?[{n:'Yara Said',s:'94%',av:'YS',bg:'#ede9fe',tc:'#5b21b6',tags:['Skills passen','Beschikbaar','Salaris OK']}]:[{n:'Thomas Berg',s:'91%',av:'TB',bg:'#fce7f3',tc:'#9d174d',tags:['Skills passen','4j ervaring Java']},{n:'Yara Said',s:'88%',av:'YS',bg:'#ede9fe',tc:'#5b21b6',tags:['Skills passen','Beschikbaar']},{n:'Piotr Nowak',s:'84%',av:'PN',bg:'#dcfce7',tc:'#166534',tags:['Skills passen','Salaris OK']}];
+  var html='<div class="fp-section"><div class="fp-sec-title">Vacature · '+currentCard.context+'</div>'+cands.map(function(c){return'<div class="fp-match-row"><div class="fp-match-av" style="background:'+c.bg+';color:'+c.tc+'">'+c.av+'</div><div style="flex:1"><div style="font-size:12px;font-weight:500">'+c.n+'</div><div style="display:flex;flex-wrap:wrap;margin-top:3px">'+c.tags.map(function(t){return'<span class="fp-tag">'+t+'</span>'}).join('')+'</div></div><div><div class="fp-match-score">'+c.s+'</div><div class="fp-match-lbl">match</div></div></div>';}).join('')+'</div><div class="fp-section"><div class="fp-sec-title">Opmerking</div><textarea class="fp-textarea" style="min-height:60px" placeholder="Voeg een notitie toe…"></textarea></div>';
+  document.getElementById('fpBody').innerHTML=html;
+  document.getElementById('fpProgLbl').textContent='Stap 2 van 3 — Controleer & bevestig';
+  document.getElementById('fpSendBtn').disabled=false;
+}
+
+function buildTaskBody(){
+  var d=new Date();d.setDate(d.getDate()+7);
+  document.getElementById('fpBody').innerHTML='<div class="fp-section"><div class="fp-sec-title">Taakomschrijving</div><input class="fp-input" value="Introductie '+currentCard.name+' plannen bij klant"/></div><div class="fp-section"><div class="fp-sec-title">Deadline</div><input class="fp-input" type="date" value="'+d.toISOString().split('T')[0]+'"/></div><div class="fp-section"><div class="fp-sec-title">Gekoppeld aan</div><div style="margin-top:4px"><span class="fp-tag">👤 '+currentCard.name+'</span><span class="fp-tag">🏢 '+currentCard.context.split(' bij ').pop()+'</span></div></div><div class="fp-section"><div class="fp-sec-title">Notitie</div><textarea class="fp-textarea" style="min-height:65px">Kandidaat staat al in pipeline. Klant verwacht nieuws volgende week.</textarea></div>';
+  document.getElementById('fpProgLbl').textContent='Stap 2 van 3 — Controleer & sla op';
+  document.getElementById('fpSendBtn').disabled=false;
+}
+
+function buildTranscriptBody(){
+  var fields=['Functietitel: Senior Recruiter','Beschikbaar: per 1 mei 2026','Salariswens: €4.800 – €5.500','Werkvorm: hybride (2-3 dagen kantoor)','Locatie: Amsterdam / Utrecht','Talen: NL, EN, ES','Rijbewijs: ja (B)','Open voor internationaal: ja','Sector voorkeur: Tech / Finance','Contract: voorkeur vast','Start: flexibel, liefst per direct'];
+  document.getElementById('fpBody').innerHTML='<div class="fp-section"><div class="fp-sec-title">Uitgelichte velden — klik ✓ om te bevestigen</div>'+fields.map(function(f){return'<div class="fp-row"><div class="fp-row-dot"></div><span class="fp-row-lbl">'+f+'</span><button class="fp-row-btn" onclick="confirmTF(this)">✓ OK</button></div>';}).join('')+'</div>';
+  document.getElementById('fpProgLbl').textContent='Stap 2 van 3 — Valideer velden';
+  document.getElementById('fpSendBtn').disabled=false;
+}
+
+function confirmTF(btn){btn.textContent='✓';btn.className='fp-row-btn confirmed';btn.disabled=true;}
+
+function sendPanel(){
+  if(!currentCard)return;
+  var el=document.getElementById(currentCard.id);
+  if(el){el.classList.add('out-l');setTimeout(function(){el.style.display='none';updateCount()},300);}
+  var msgs={mail:'✓ Mail verstuurd aan '+currentCard.name,match:'✓ Match aangemaakt: '+currentCard.name,task:'✓ Taak aangemaakt voor '+currentCard.name,transcript:'✓ Transcript opgeslagen voor '+currentCard.name};
+  document.getElementById('fps1').className='fp-step done';document.getElementById('fps2').className='fp-step done';document.getElementById('fps3').className='fp-step done';
+  document.getElementById('fpProgLbl').textContent='Voltooid ✓';
+  document.getElementById('fpBody').innerHTML='<div class="fp-done"><div class="fp-done-icon"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></div><div class="fp-done-title">Actie voltooid!</div><div class="fp-done-sub">'+(msgs[currentCard.type]||'Actie afgehandeld')+'</div></div>';
+  document.getElementById('fpFooter').style.display='none';
+  toast(msgs[currentCard.type]||'✓ Actie voltooid');
+  setTimeout(closePanel,2200);
+}
+
+function skipPanel(){toast('Actie overgeslagen');closePanel();}
+function closePanel(){document.getElementById('fp').classList.add('hidden');isMin=false;currentCard=null;}
+function toggleMin(){var p=document.getElementById('fp');isMin=!isMin;p.classList.toggle('minimized',isMin);}
+
+function makeDraggable(){
+  var p=document.getElementById('fp'),h=document.getElementById('fpHead');
+  h.onmousedown=function(e){if(e.target.closest('.fp-btn'))return;dragOn=true;var r=p.getBoundingClientRect();dox=e.clientX-r.left;doy=e.clientY-r.top;document.onmousemove=function(ev){if(!dragOn)return;p.style.right='auto';p.style.bottom='auto';p.style.left=Math.max(0,ev.clientX-dox)+'px';p.style.top=Math.max(0,ev.clientY-doy)+'px';};document.onmouseup=function(){dragOn=false;};};
+}
+
+// init
+(function(){document.querySelectorAll('.page').forEach(function(p){p.style.display='none'});document.getElementById('page-assistant').style.display='flex';})();
+</script>
+</body>
+</html>
